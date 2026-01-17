@@ -66,7 +66,6 @@ end
 
 
 local getbuf = function(buf)
-  print(type(buf))
   return {
     bufnr = buf,
     flag = (buf == core.CTX().bufnr and "%")
