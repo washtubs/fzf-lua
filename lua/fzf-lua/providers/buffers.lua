@@ -66,6 +66,7 @@ end
 
 
 local getbuf = function(buf)
+  print(type(buf))
   return {
     bufnr = buf,
     flag = (buf == core.CTX().bufnr and "%")
@@ -100,20 +101,22 @@ end
 local populate_buffer_entries = function(opts, bufnrs, winid)
   local buffers = {}
   for _, bufnr in ipairs(bufnrs) do
-    local buf = getbuf(bufnr)
+    local ok, buf = pcall(getbuf, bufnr)
+    if ok then
 
-    -- Get the name for missing/quickfix/location list buffers
-    -- NOTE: we get it here due to `gen_buffer_entry` called within a fast event
-    if not buf.info.name or #buf.info.name == 0 then
-      buf.info.name = utils.nvim_buf_get_name(buf.bufnr, buf.info)
+      -- Get the name for missing/quickfix/location list buffers
+      -- NOTE: we get it here due to `gen_buffer_entry` called within a fast event
+      if not buf.info.name or #buf.info.name == 0 then
+        buf.info.name = utils.nvim_buf_get_name(buf.bufnr, buf.info)
+      end
+
+      -- get the correct lnum for tabbed buffers
+      if winid then
+        buf.info.lnum = vim.api.nvim_win_get_cursor(winid)[1]
+      end
+
+      table.insert(buffers, buf)
     end
-
-    -- get the correct lnum for tabbed buffers
-    if winid then
-      buf.info.lnum = vim.api.nvim_win_get_cursor(winid)[1]
-    end
-
-    table.insert(buffers, buf)
   end
 
   if opts.sort_lastused then
